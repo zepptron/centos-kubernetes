@@ -1,0 +1,20 @@
+# Cluster settings
+ETCD_NAME={{ ip }}
+ETCD_INITIAL_ADVERTISE_PEER_URLS="{{ etcd_prot }}://{{ ip }}:{{ etcd_peer_port }}"
+ETCD_LISTEN_PEER_URLS="{{ etcd_prot }}://{{ ip }}:{{ etcd_peer_port }}"
+ETCD_LISTEN_CLIENT_URLS="{{ etcd_prot }}://{{ ip }}:{{ etcd_client_port }}"
+ETCD_ADVERTISE_CLIENT_URLS="{{ etcd_prot }}://{{ ip }}:{{ etcd_client_port }}"
+ETCD_INITIAL_CLUSTER_TOKEN="{{ etcd_token }}"
+ETCD_INITIAL_CLUSTER="{% for node in groups['etcd'] %}{{ node }}={{ etcd_prot }}://{{ node }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+ETCD_INITIAL_CLUSTER_STATE="new"
+ETCD_DATA_DIR={{ etcd_data_dir }}
+
+# TLS settings
+ETCD_CLIENT_CERT_AUTH="true"
+ETCD_TRUSTED_CA_FILE={{ etcd_cert_dir }}/ca.pem
+ETCD_PEER_TRUSTED_CA_FILE={{ etcd_cert_dir }}/ca.pem
+ETCD_CERT_FILE={{ etcd_cert_dir }}/server-{{ etcd_name }}.pem
+ETCD_KEY_FILE={{ etcd_cert_dir }}/server-{{ etcd_name }}-key.pem
+ETCD_PEER_CERT_FILE={{ etcd_cert_dir }}/peer-{{ etcd_name }}.pem
+ETCD_PEER_KEY_FILE={{ etcd_cert_dir }}/peer-{{ etcd_name }}-key.pem
+ETCD_PEER_CLIENT_CERT_AUTH="true"

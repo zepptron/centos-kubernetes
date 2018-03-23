@@ -1,0 +1,13 @@
+---
+
+- hosts: cluster
+  become: yes
+  become_method: sudo
+  gather_facts: True
+
+  roles:
+    - vagrant # remove this role when installing on different environment
+    - users
+    - etcd
+    - docker
+    - kube-master

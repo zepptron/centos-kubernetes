@@ -1,0 +1,16 @@
+{
+  "CN": "system:node:kube-3.foo.io",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "DE",
+      "L": "munich",
+      "O": "system:nodes",
+      "OU": "fin",
+      "ST": "bavaria"
+    }
+  ]
+}

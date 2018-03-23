@@ -1,0 +1,52 @@
+
+role_name: "etcd"
+
+# ETCD vars
+etcd_version: "v3.3.2"
+etcd_token: "9477af68bbee1b9ae037d6fd9e7efefd"
+etcd_peer_port: "2380"
+etcd_prot: "https"
+etcd_client_port: "2379"
+etcd_bin: "/usr/local/bin"
+etcd_path: "/tmp/etcd-{{ etcd_version }}-linux-amd64"
+etcd_cert_dir: "/var/lib/etcd/certs"
+etcd_config_dir: "/etc/etcd"
+etcd_conf: "{{ etcd_config_dir }}/etcd.conf"
+etcd_data_dir: "/var/lib/etcd/data"
+etcd_backup_dir: "/var/lib/etcd/backup"
+
+directories: [
+  { path: "{{ etcd_config_dir }}",       owner: "{{ app_user }}", group: "{{ app_group }}", mode: 775 },
+  { path: "{{ etcd_data_dir }}",         owner: "{{ app_user }}", group: "{{ app_group }}", mode: 775 },
+  { path: "{{ etcd_backup_dir }}",       owner: "{{ app_user }}", group: "{{ app_group }}", mode: 775 },
+  { path: "{{ etcd_cert_dir }}",         owner: "{{ app_user }}", group: "{{ app_group }}", mode: 550 }
+]
+
+binarys: [
+  { path: "{{ etcd_path }}/etcd",    dest: "{{ etcd_bin }}/etcd",    owner: "{{ app_user }}", group: "{{ app_group }}", mode: 775 },
+  { path: "{{ etcd_path }}/etcdctl", dest: "{{ etcd_bin }}/etcdctl", owner: "{{ app_user }}", group: "{{ app_group }}", mode: 775 }
+]
+
+configs: [
+  { src: "roles/{{ role_name }}/templates/etcd.conf.j2",    dest: "{{ etcd_config_dir }}/etcd.conf",  owner: "{{ app_user }}",  group: "{{ app_group }}",   mode: 660 },
+  { src: "roles/{{ role_name }}/templates/etcd.service.j2", dest: "/etc/systemd/system/etcd.service", owner: "root",            group: "root",              mode: 644 }
+]
+
+certs: [
+  { src: "certs/{{ env }}/etcd-certs/ca-key.pem",                       dest: "{{ etcd_cert_dir }}/ca-key.pem",                      owner: "{{ app_user }}", group: "{{ app_group }}", mode: 440 },
+  { src: "certs/{{ env }}/etcd-certs/ca.pem",                           dest: "{{ etcd_cert_dir }}/ca.pem",                          owner: "{{ app_user }}", group: "{{ app_group }}", mode: 440 },
+  { src: "certs/{{ env }}/etcd-certs/client-key.pem",                   dest: "{{ etcd_cert_dir }}/client-key.pem",                  owner: "{{ app_user }}", group: "{{ app_group }}", mode: 440 },
+  { src: "certs/{{ env }}/etcd-certs/client.pem",                       dest: "{{ etcd_cert_dir }}/client.pem",                      owner: "{{ app_user }}", group: "{{ app_group }}", mode: 440 },
+  { src: "certs/{{ env }}/etcd-certs/peer-{{ etcd_name }}-key.pem",     dest: "{{ etcd_cert_dir }}/peer-{{ etcd_name }}-key.pem",    owner: "{{ app_user }}", group: "{{ app_group }}", mode: 440 },
+  { src: "certs/{{ env }}/etcd-certs/peer-{{ etcd_name }}.pem",         dest: "{{ etcd_cert_dir }}/peer-{{ etcd_name }}.pem",        owner: "{{ app_user }}", group: "{{ app_group }}", mode: 440 },
+  { src: "certs/{{ env }}/etcd-certs/server-{{ etcd_name }}-key.pem",   dest: "{{ etcd_cert_dir }}/server-{{ etcd_name }}-key.pem",  owner: "{{ app_user }}", group: "{{ app_group }}", mode: 440 },
+  { src: "certs/{{ env }}/etcd-certs/server-{{ etcd_name }}.pem",       dest: "{{ etcd_cert_dir }}/server-{{ etcd_name }}.pem",      owner: "{{ app_user }}", group: "{{ app_group }}", mode: 440 }
+]
+
+env_vars: [
+  { dest: "/root/.bashrc", line: "export ETCDCTL_API=3" },
+  { dest: "/root/.bashrc", line: "export ETCDCTL_CACERT={{ etcd_cert_dir }}/ca.pem" },
+  { dest: "/root/.bashrc", line: "export ETCDCTL_CERT={{ etcd_cert_dir }}/client.pem" },
+  { dest: "/root/.bashrc", line: "export ETCDCTL_KEY={{ etcd_cert_dir }}/client-key.pem" },
+  { dest: "/root/.bashrc", line: "export ETCDCTL_ENDPOINTS={% for node in groups['etcd'] %}{{ etcd_prot }}://{{ node }}:{{ etcd_client_port }}{% if not loop.last %},{% endif %}{% endfor %}" }
+]

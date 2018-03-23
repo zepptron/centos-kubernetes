@@ -1,0 +1,46 @@
+---
+
+- name: Ensure swap is disabled
+  command: swapoff -a
+  tags: [docker]
+
+- name: Adding Docker Repo
+  shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  tags: [docker]
+
+- name: Installing docker...
+  yum:
+    name: docker-ce-{{ docker_version }}
+    state: present
+  tags: [docker]
+
+- name: Ensure all needed directories are present
+  file:
+    state: directory
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+  with_items: "{{ directories }}"
+  tags: [docker]
+
+- name: Replace default Docker systemd file
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ configs }}"
+  tags: [docker]
+
+- name: Ensure systemd is reloaded
+  systemd: daemon_reload=yes
+  tags: [docker]
+  
+- name: Restarting and enabling Docker...
+  systemd:
+    name: docker.service
+    state: restarted
+    enabled: True
+  tags: [docker]

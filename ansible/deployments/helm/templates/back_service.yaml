@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Values.backendService.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: {{ .Values.backendDeployment.name }}
+  ports:
+  - protocol: {{ .Values.backendService.portProtocol }}
+    port: {{ .Values.backendService.port }}
+    targetPort: {{ .Values.backendDeployment.port }}

@@ -1,0 +1,21 @@
+[Unit]
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+ExecStart=/bin/kube-controller-manager \
+  --address=0.0.0.0 \
+  --cluster-cidr={{ pod_cidr }} \
+  --cluster-name=kube \
+  --master=http://127.0.0.1:8080 \
+  --service-cluster-ip-range={{ service_cidr }} \
+  --cluster-signing-cert-file={{ k8s_certs }}/ca.pem \
+  --cluster-signing-key-file={{ k8s_certs }}/ca-key.pem \
+  --root-ca-file={{ k8s_certs }}/ca.pem \
+  --service-account-private-key-file={{ k8s_certs }}/ca-key.pem \
+  --v=2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

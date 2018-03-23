@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.sideDeployment.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.labels.app }}
+spec:
+  replicas: {{ .Values.sideDeployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.sideDeployment.name }}
+  strategy:
+    type: {{ .Values.sideDeployment.updateType }}
+    rollingUpdate:
+      maxSurge: {{ .Values.sideDeployment.maxSurge }}
+      maxUnavailable: {{ .Values.sideDeployment.maxUnavailable }}
+  minReadySeconds: {{ .Values.sideDeployment.readysec }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.sideDeployment.name }}
+    spec:
+      containers:
+      - name: {{ .Values.sideDeployment.name }}
+        image: {{ .Values.sideDeployment.dockerImage }}:{{ .Values.sideDeployment.dockerTag }}
+        ports:
+        - containerPort: {{ .Values.sideDeployment.port }}

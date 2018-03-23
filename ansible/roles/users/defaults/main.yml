@@ -1,0 +1,40 @@
+---
+
+# Used vars and their locations
+# app_group     -> group_vars/all
+# app_user      -> group_vars/all
+# env           -> group_vars/all
+# ssh-keygen -t rsa -b 4096 -f id_rsa_dev
+
+# an array of common groups
+host_groups: [
+  { name: "{{ app_group }}",    gid: "1500" },
+  { name: "{{ docker_group }}", gid: "666" }
+]
+
+# Hint: to create a password use:
+# pip install passlib
+# python -c "from passlib.hash import sha512_crypt; import getpass; print sha512_crypt.using(rounds=5000).hash(getpass.getpass())"
+
+# an array of common users
+users: [
+  { name: "{{ app_user }}",  uid: "{{ app_uid }}", group: "{{ app_group }}",   groups: "{{ docker_group }}", password: "{{ app_pw }}" }
+]
+
+# an array of directories which needs to be created
+directories: [
+  { path: "/home/{{ app_user }}/.ssh",  owner: "{{ app_user }}", group: "{{ app_group }}", mode: 700 },
+  { path: "/data",                      owner: "{{ app_user }}", group: "{{ app_group }}", mode: 775 }
+]
+
+# dynamically pick ssh keys depending on the environment
+keys: [
+  { src: "roles/users/files/id_rsa_{{ env }}",      dest: "/home/{{ app_user }}/.ssh/id_rsa",     owner: "{{ app_user }}", group: "{{ app_group }}", mode: 600 },
+  { src: "roles/users/files/id_rsa_{{ env }}.pub",  dest: "/home/{{ app_user }}/.ssh/id_rsa.pub", owner: "{{ app_user }}", group: "{{ app_group }}", mode: 644 }
+]
+
+# A list of rsa keys which should be added to the authorized_key file
+authorized_keys: [
+  { user: "{{ app_user }}", key: "roles/users/files/id_rsa_{{ env }}.pub" },
+  { user: "root",           key: "roles/users/files/id_rsa_{{ env }}.pub" }
+]

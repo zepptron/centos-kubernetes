@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Values.sideService.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: {{ .Values.sideDeployment.name }}
+  ports:
+  - protocol: {{ .Values.sideService.portProtocol }}
+    port: {{ .Values.sideService.port }}
+    targetPort: {{ .Values.sideDeployment.port }}

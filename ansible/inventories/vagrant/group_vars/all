@@ -1,0 +1,23 @@
+---
+
+# generic vars
+domain: "foo.io"
+env: "vagrant"
+ip: "{{ ansible_eth1.ipv4.address }}"
+hostname: "{{ ansible_hostname }}"
+cgroupdriver: "systemd"
+
+# User vars
+app_user: "zepp"
+app_uid: "1500"
+app_group: "zepp"
+app_pw: "$6$JNWb59GmBaMmF5v3$Pvhw0fetP4PrgWPc0vlAHYth/6ANbpOCWyCuNajcpu7tKL7k4Dpc6Z59CTfynVbBPhwEEcpMH7rqwTVtxLZe71"
+
+# Docker vars
+docker_group: "docker"
+
+# Kube vars
+kube_user: "kubedude"
+kube_uid: "1337"
+kube_gid: "1338"
+kube_group: "kubegroup"

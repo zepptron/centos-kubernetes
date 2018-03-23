@@ -1,0 +1,23 @@
+---
+
+- name: Ensure all needed directories are present
+  when: worker is defined
+  file:
+    state: directory
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+  with_items: "{{ directories }}"
+  tags: [k8s]
+
+- name: Ensure all needed binarys are present
+  when: worker is defined
+  copy:
+    src: "{{ item.path }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: 0755
+  with_items: "{{ binarys }}"
+  tags: [k8s]

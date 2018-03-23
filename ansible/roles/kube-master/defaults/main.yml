@@ -1,0 +1,58 @@
+# Variables are defined at the top or in ../ansible/inventories/$env/group_vars/all
+
+role_name: kube-master
+k8s_version: v1.9.6
+k8s_path: /etc/kubernetes
+k8s_config: "{{ k8s_path }}/config"
+k8s_certs: "{{ k8s_path }}/ca"
+k8s_api_port: "8443"
+k8s_api_address: "172.16.0.10"
+
+# k8s variables
+auth_mode: "Node,RBAC"              # api
+privileged: "true"                  # api
+service_cidr: "10.10.0.0/16"        # api + controller
+pod_cidr: "10.222.0.0/16"           # controller
+pod_eviction_timeout: 3s            # controller
+node_monitor_grace_period: 10s      # controller
+
+# role related arrays, this stuff will be applied
+k8s_groups: [
+  { name: "{{ kube_group }}",   gid: "{{ kube_gid }}" }
+]
+
+k8s_users: [
+  { name: "{{ kube_user }}", uid: "{{ kube_uid }}", group: "{{ kube_group }}",  groups: "{{ kube_group }}" }
+]
+
+directories: [
+  { path: "{{ k8s_path }}",   owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 },
+  { path: "{{ k8s_certs }}",  owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 }
+]
+
+binarys: [
+  { src: "roles/{{ role_name }}/files/kube-apiserver",           dest: "/bin/kube-apiserver",          owner: root, group: root, mode: 740 },
+  { src: "roles/{{ role_name }}/files/kube-controller-manager",  dest: "/bin/kube-controller-manager", owner: root, group: root, mode: 740 },
+  { src: "roles/{{ role_name }}/files/kube-scheduler",           dest: "/bin/kube-scheduler",          owner: root, group: root, mode: 740 },
+  { src: "roles/{{ role_name }}/files/kubectl",                  dest: "/bin/kubectl",                 owner: root, group: root, mode: 740 }
+]
+
+systemd_units: [
+  { src: "roles/{{ role_name }}/templates/kube-apiserver.service.j2",          dest: "/usr/lib/systemd/system/kube-apiserver.service",           owner: "root", group: "root", mode: 664 },
+  { src: "roles/{{ role_name }}/templates/kube-controller-manager.service.j2", dest: "/usr/lib/systemd/system/kube-controller-manager.service",  owner: "root", group: "root", mode: 664 },
+  { src: "roles/{{ role_name }}/templates/kube-scheduler.service.j2",          dest: "/usr/lib/systemd/system/kube-scheduler.service",           owner: "root", group: "root", mode: 664 }
+]
+
+certs: [
+  { src: "certs/{{ env }}/k8s-certs/admin.pem",          dest: "{{ k8s_certs }}/admin.pem",          owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 },
+  { src: "certs/{{ env }}/k8s-certs/ca.pem",             dest: "{{ k8s_certs }}/ca.pem",             owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 },
+  { src: "certs/{{ env }}/k8s-certs/ca-key.pem",         dest: "{{ k8s_certs }}/ca-key.pem",         owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 },
+  { src: "certs/{{ env }}/k8s-certs/kubernetes.pem",     dest: "{{ k8s_certs }}/kubernetes.pem",     owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 },
+  { src: "certs/{{ env }}/k8s-certs/kubernetes-key.pem", dest: "{{ k8s_certs }}/kubernetes-key.pem", owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 }
+]
+
+services: [
+  { name: "kube-apiserver" },
+  { name: "kube-controller-manager" },
+  { name: "kube-scheduler" }
+]

@@ -1,0 +1,63 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: webtest
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+  labels:
+    app: webl0r
+spec:
+  rules:
+  - host: test.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: webling
+          servicePort: 80
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: webling
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: webl0r
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webtest
+  namespace: default
+  labels:
+    app: web
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: webl0r
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 3
+      maxUnavailable: 0
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: webl0r
+    spec:
+      containers:
+      - name: hostexposer
+        image: zepp/fintest:43
+        ports:
+        - containerPort: 8000

@@ -1,0 +1,4 @@
+.DS_Store*
+.vagrant
+ansible/roles/kube-master/files/*
+ansible/roles/kube-node/files/*

@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Values.webService.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: {{ .Values.webDeployment.name }}
+  ports:
+  - protocol: {{ .Values.webService.portProtocol }}
+    port: {{ .Values.webService.port }}
+    targetPort: {{ .Values.webDeployment.port }}

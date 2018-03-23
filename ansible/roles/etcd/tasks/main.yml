@@ -1,0 +1,79 @@
+- name: Download ETCD...
+  when: etcd is defined
+  get_url:
+    url: https://github.com/coreos/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz
+    dest: /tmp/etcd.tar.gz
+    mode: 0440
+  tags: [etcd]
+
+- name: Extract ETCD into /tmp
+  when: etcd is defined
+  unarchive:
+    src: /tmp/etcd.tar.gz
+    dest: /tmp/
+  tags: [etcd]
+
+- name: Ensure all needed directories are present
+  when: etcd is defined
+  file:
+    state: directory
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+  with_items: "{{ directories }}"
+  tags: [etcd]
+
+- name: Ensure all needed binarys are present
+  when: etcd is defined
+  copy:
+    src: "{{ item.path }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: 0755
+  with_items: "{{ binarys }}"
+  tags: [etcd]
+
+- name: Ensure all needed Certificate files are present
+  when: etcd is defined
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ certs }}"
+  tags: [etcd]
+
+- name: Ensure all needed configuration files are present
+  when: etcd is defined
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ configs }}"
+  tags: [etcd]
+
+- name: Ensure systemd is reloaded
+  when: etcd is defined
+  systemd: daemon_reload=yes
+  tags: [etcd]
+
+- name: Ensure ETCD has restarted
+  when: etcd is defined
+  systemd:
+    state: started
+    name: etcd
+  tags: [etcd]
+
+- name: Ensure etcdctl is configured
+  when: etcd is defined
+  lineinfile:
+    state: present
+    dest: "{{ item.dest }}"
+    line: "{{ item.line }}"
+  with_items: "{{ env_vars }}"
+  tags: [etcd]

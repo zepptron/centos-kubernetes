@@ -1,0 +1,26 @@
+- hosts: localhost
+  become: yes
+  become_method: sudo
+  vars_files:
+  - "inventories/vagrant/group_vars/all" 
+  tasks:
+  - name: hosts yo!
+    template:
+      src: roles/vagrant/templates/hosts.j2
+      dest: /etc/hosts
+      owner: root
+      group: root
+      mode: 0644
+  - name: deactivate hostkey checks for kubes
+    blockinfile:
+      path: /etc/ssh/ssh_config
+      block: |
+        Host kube-*
+          StrictHostKeyChecking no
+          UserKnownHostsFile=/dev/null
+  - name: Ensure ssh has restarted
+    systemd:
+      state: restarted
+      name: sshd
+  roles:
+  - users

@@ -1,0 +1,61 @@
+---
+
+# Tasks file for the users role
+
+# This role will create and deploy all groups, users and keys
+
+# Used vars and their locations
+# host_groups        -> roles/users/defaults/main.yml
+# users             -> roles/users/defaults/main.yml
+# directories       -> roles/users/defaults/main.yml
+# keys              -> roles/users/defaults/main.yml
+# authorized_keys   -> roles/users/defaults/main.yml
+
+- name: Ensure all needed groups are created
+  group:
+    name: "{{ item.name }}"
+    gid: "{{ item.gid }}"
+    state: present
+  with_items: "{{ host_groups }}"
+  tags: [users]
+
+- name: Ensure the users are created and added to the requiered groups
+  user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    group: "{{ item.group }}"
+    groups: "{{ item.groups }}"
+    password: "{{ item.password }}"
+  with_items: "{{ users }}"
+  tags: [users]
+
+- name: Ensure all needed directories are present
+  file:
+    state: directory
+    path: "{{ item.path }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ directories }}"
+  tags: [users]
+
+- name: Ensure the ssh keys are present
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ keys }}"
+  tags: [users]
+
+- name: Enure the ssh rsa public keys are added to the authorized_key file
+  authorized_key:
+    user: "{{ item.user }}"
+    key: "{{ lookup('file', item.key) }}"
+  with_items: "{{ authorized_keys }}"
+  tags: [users]
+
+- name: Ensure root bash is set up correct
+  shell: cp -v /etc/skel/.bash* ~/
+  tags: [users]

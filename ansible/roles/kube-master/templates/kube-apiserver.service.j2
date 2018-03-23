@@ -1,0 +1,42 @@
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+After=etcd.service
+
+[Service]
+ExecStart=/bin/kube-apiserver \
+  --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \
+  --advertise-address={{ ip }} \
+  --allow-privileged=true \
+  --apiserver-count={{ groups['master'] | length }} \
+  --audit-log-maxage=30 \
+  --audit-log-maxbackup=3 \
+  --audit-log-maxsize=100 \
+  --audit-log-path=/var/log/audit.log \
+  --authorization-mode={{ auth_mode }} \
+  --bind-address=0.0.0.0 \
+  --client-ca-file={{ k8s_certs }}/ca.pem \
+  --etcd-cafile={{ etcd_cert_dir }}/ca.pem \
+  --etcd-certfile={{ etcd_cert_dir }}/client.pem \
+  --etcd-keyfile={{ etcd_cert_dir }}/client-key.pem \
+  --etcd-servers={% for node in groups['etcd'] %}{{ etcd_prot }}://{{ node }}:{{ etcd_client_port }}{% if not loop.last %},{% endif %}{% endfor %} \
+  --event-ttl=1h \
+  --insecure-bind-address=127.0.0.1 \
+  --kubelet-certificate-authority={{ k8s_certs }}/ca.pem \
+  --kubelet-client-certificate={{ k8s_certs }}/kubernetes.pem \
+  --kubelet-client-key={{ k8s_certs }}/kubernetes-key.pem \
+  --kubelet-https=true \
+  --runtime-config=api/all \
+  --service-account-key-file={{ k8s_certs }}/ca-key.pem \
+  --service-cluster-ip-range={{ service_cidr }} \
+  --tls-ca-file={{ k8s_certs }}/ca.pem \
+  --tls-cert-file={{ k8s_certs }}/kubernetes.pem \
+  --tls-private-key-file={{ k8s_certs }}/kubernetes-key.pem \
+  --v=2
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

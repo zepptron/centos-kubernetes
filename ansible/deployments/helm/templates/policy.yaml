@@ -1,0 +1,15 @@
+#kind: NetworkPolicy
+#apiVersion: networking.k8s.io/v1
+#metadata:
+#  name: {{ .Values.policy.name }}
+#spec:
+#  podSelector:
+#    matchLabels:
+#      app: {{ .Values.webDeployment.name }}
+#      role: {{ .Values.policy.hitlabel }}
+#  ingress:
+#  - from:
+#      - podSelector:
+#          matchLabels:
+#            app: {{ .Values.backendDeployment.name }}
+#            role: {{ .Values.policy.allowlabel }}
