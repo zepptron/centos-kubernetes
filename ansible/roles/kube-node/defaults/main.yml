@@ -1,2 +1,60 @@
+# Variables are defined at the top or in ../ansible/inventories/$env/group_vars/all
+
 role_name: kube-master
-k8s_version: v1.9.6
+cni_conf_dir: "/etc/cni/net.d"
+cni_bin_dir: "/opt/cni/bin"
+kubelet_dir: "/var/lib/kubelet"
+kube_proxy_dir: "/var/lib/kube-proxy"
+k8s_path: /var/lib/kubernetes
+k8s_certs: "{{ k8s_path }}/ca"
+
+# k8s variables
+auth_mode: "Node,RBAC"              # api
+privileged: "true"                  # api
+service_cidr: "10.10.0.0/16"        # api + controller
+pod_cidr: "10.222.0.0/16"           # controller
+pod_eviction_timeout: 3s            # controller
+node_monitor_grace_period: 10s      # controller
+
+# role related arrays, this stuff will be applied
+k8s_groups: [
+  { name: "{{ kube_group }}",   gid: "{{ kube_gid }}" }
+]
+
+k8s_users: [
+  { name: "{{ kube_user }}", uid: "{{ kube_uid }}", group: "{{ kube_group }}",  groups: "{{ kube_group }}" }
+]
+
+directories: [
+  { path: "{{ k8s_certs }}",        owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 },
+  { path: "{{ cni_conf_dir }}",     owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 },
+  { path: "{{ cni_bin_dir }}",      owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 },
+  { path: "{{ kubelet_dir }}",      owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 },
+  { path: "{{ kube_proxy_dir }}",   owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 }
+]
+
+binarys: [
+  { src: "roles/{{ role_name }}/files/kube-proxy", dest: "/bin/kube-proxy", owner: root, group: root, mode: 740 },
+  { src: "roles/{{ role_name }}/files/kubelet",    dest: "/bin/kubelet",    owner: root, group: root, mode: 740 }
+]
+
+systemd_units: [
+  { src: "roles/{{ role_name }}/templates/kube-proxy.service.j2", dest: "/usr/lib/systemd/system/kube-proxy.service",  owner: "root", group: "root", mode: 664 },
+  { src: "roles/{{ role_name }}/templates/kubelet.service.j2",    dest: "/usr/lib/systemd/system/kubelet.service",     owner: "root", group: "root", mode: 664 }
+]
+
+certs: [
+  { src: "certs/{{ env }}/k8s-certs/{{ hostname }}-key.pem",  dest: "{{ kubelet_dir }}/{{ hostname }}-key.pem",   owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 },
+  { src: "certs/{{ env }}/k8s-certs/{{ hostname }}.pem",      dest: "{{ kubelet_dir }}/{{ hostname }}.pem",       owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 },
+  { src: "certs/{{ env }}/k8s-certs/ca.pem",                  dest: "{{ k8s_certs }}/ca.pem",                     owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 }
+
+]
+
+configs: [
+  { src: "certs/{{ env }}/k8s-certs/{{ hostname }}.kubeconfig",  dest: "{{ kubelet_dir }}",  owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 }
+]
+
+services: [
+  { name: "kube-proxy" },
+  { name: "kubelet" }
+]

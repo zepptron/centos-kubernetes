@@ -1,0 +1,30 @@
+[Unit]
+Description=Kubernetes Kubelet
+Documentation=https://github.com/kubernetes/kubernetes
+After=network.target
+
+[Service]
+ExecStart=/bin/kubelet \
+  --allow-privileged=true \
+  --anonymous-auth=false \
+  --authorization-mode=Webhook \
+  --client-ca-file={{ k8s_certs }}/ca.pem \
+  --cluster-dns=10.11.12.10 \
+  --cluster-domain=cluster.local \
+  --cgroup-driver={{ cgroupdriver }} \
+  --cni-conf-dir={{ cni_conf_dir }} \
+  --cni-bin-dir={{ cni_bin_dir }} \
+  --image-pull-progress-deadline=2m \
+  --kubeconfig={{ kubelet_dir }}/{{ hostname }}.kubeconfig \
+  --network-plugin=cni \
+  --pod-cidr=${POD_CIDR} \
+  --register-node=true \
+  --runtime-request-timeout=15m \
+  --tls-cert-file={{ kubelet_dir }}/{{ hostname }}.pem \
+  --tls-private-key-file={{ kubelet_dir }}/{{ hostname }}-key.pem \
+  --v=2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

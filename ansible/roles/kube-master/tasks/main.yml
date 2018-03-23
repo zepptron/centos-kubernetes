@@ -6,7 +6,7 @@
     name: "{{ item.name }}"
     gid: "{{ item.gid }}"
   with_items: "{{ k8s_groups }}"
-  tags: [k8s]
+  tags: [k8s-master]
 
 - name: Ensure all k8s related users are created and added to the requiered groups
   when: master is defined
@@ -16,7 +16,7 @@
     group: "{{ item.groups }}"
     groups: "{{ item.groups }}"
   with_items: "{{ k8s_users }}"
-  tags: [k8s]
+  tags: [k8s-master]
 
 - name: Ensure all needed directories are present
   when: master is defined
@@ -27,7 +27,7 @@
     owner: "{{ item.owner }}"
     group: "{{ item.group }}"
   with_items: "{{ directories }}"
-  tags: [k8s]
+  tags: [k8s-master]
 
 - name: Ensure all needed binarys are present
   when: master is defined
@@ -38,7 +38,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ binarys }}"
-  tags: [k8s]
+  tags: [k8s-master]
 
 - name: Ensure all k8s related certificates are present
   when: master is defined
@@ -49,7 +49,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ certs }}"
-  tags: [k8s]
+  tags: [k8s-master]
 
 - name: Ensure all needed systemd unitfiles are present
   when: master is defined
@@ -60,7 +60,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ systemd_units }}"
-  tags: [k8s]
+  tags: [k8s-master]
 
 - name: Ensure services have restarted
   when: master is defined
@@ -70,4 +70,36 @@
     enabled: True
     daemon_reload: yes
   with_items: "{{ services }}"
-  tags: [k8s]
+  tags: [k8s-master]
+
+- name: insert ~/.bashrc hacks for good times
+  when: master is defined
+  blockinfile:
+    path: /root/.bashrc
+    block: |
+      source <(kubectl completion bash)
+
+      alias k="kubectl"
+      alias ll="ls -lah"
+
+      function k-sys() {
+        alias k="kubectl --namespace kube-system"
+        printf "\n${red}kubectl --namespace kube-system active\n\n${reset}"
+      }
+      function k-pub() {
+        alias k="kubectl --namespace kube-public"
+        printf "\n${green}kubectl --namespace kube-public active\n\n${reset}"
+      }
+      function k-def() {
+        alias k="kubectl"
+        printf "\n${green}kubectl without namespace active\n\n${reset}"
+      }
+      function k-nodes() {
+        for i in kube-{1..3}; do
+          printf "${yellow}item: $i:${reset}\n"
+          kubectl describe node $i.foo.io | grep -A4 "Allocated resources:"
+        done
+      }
+  tags: [k8s-master]
+
+# executing clusterroles.yml in files/ from to access the kubelets

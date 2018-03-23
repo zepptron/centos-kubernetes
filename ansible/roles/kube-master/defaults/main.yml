@@ -3,7 +3,6 @@
 role_name: kube-master
 k8s_version: v1.9.6
 k8s_path: /etc/kubernetes
-k8s_config: "{{ k8s_path }}/config"
 k8s_certs: "{{ k8s_path }}/ca"
 k8s_api_port: "8443"
 k8s_api_address: "172.16.0.10"

@@ -1,4 +1,20 @@
----
+- name: Ensure all k8s related groups are created
+  when: worker is defined
+  group:
+    name: "{{ item.name }}"
+    gid: "{{ item.gid }}"
+  with_items: "{{ k8s_groups }}"
+  tags: [k8s-worker]
+
+- name: Ensure all k8s related users are created and added to the requiered groups
+  when: worker is defined
+  user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    group: "{{ item.groups }}"
+    groups: "{{ item.groups }}"
+  with_items: "{{ k8s_users }}"
+  tags: [k8s-worker]
 
 - name: Ensure all needed directories are present
   when: worker is defined
@@ -9,15 +25,78 @@
     owner: "{{ item.owner }}"
     group: "{{ item.group }}"
   with_items: "{{ directories }}"
-  tags: [k8s]
+  tags: [k8s-worker]
 
 - name: Ensure all needed binarys are present
   when: worker is defined
   copy:
-    src: "{{ item.path }}"
+    src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     owner: "{{ item.owner }}"
     group: "{{ item.group }}"
-    mode: 0755
+    mode: "{{ item.mode }}"
   with_items: "{{ binarys }}"
-  tags: [k8s]
+  tags: [k8s-worker]
+
+- name: Ensure all needed configs are present
+  when: worker is defined
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ configs }}"
+  tags: [k8s-worker]
+
+- name: Ensure all k8s related certificates are present
+  when: worker is defined
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ certs }}"
+  tags: [k8s-worker]
+
+- name: Ensure all needed systemd unitfiles are present
+  when: worker is defined
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ systemd_units }}"
+  tags: [k8s-worker]
+
+- name: Ensure services have restarted
+  when: worker is defined
+  systemd:
+    state: restarted
+    name: "{{ item.name }}"
+    enabled: True
+    daemon_reload: yes
+  with_items: "{{ services }}"
+  tags: [k8s-worker]
+
+
+
+
+
+
+#- name: Download CNI
+#  when: worker is defined
+#  get_url:
+#    url: https://github.com/containernetworking/plugins/releases/download/{{ cni_version }}/cni-plugins-amd64-{{ cni_version }}.tgz
+#    dest: /tmp/cni.tgz
+#  tags: [k8s-worker]
+#
+#- name: Extract CNI into /tmp
+#  when: worker is defined
+#  unarchive:
+#    src: /tmp/cni.tgz
+#    dest: /tmp/
+#    remote_src: yes
+#  tags: [k8s-worker]
