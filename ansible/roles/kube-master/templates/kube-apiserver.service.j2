@@ -8,6 +8,7 @@ After=etcd.service
 ExecStart=/bin/kube-apiserver \
   --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \
   --advertise-address={{ ip }} \
+  --secure-port={{ k8s_api_port }} \
   --allow-privileged=true \
   --apiserver-count={{ groups['master'] | length }} \
   --audit-log-maxage=30 \

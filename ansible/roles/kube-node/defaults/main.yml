@@ -47,14 +47,32 @@ certs: [
   { src: "certs/{{ env }}/k8s-certs/{{ hostname }}-key.pem",  dest: "{{ kubelet_dir }}/{{ hostname }}-key.pem",   owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 },
   { src: "certs/{{ env }}/k8s-certs/{{ hostname }}.pem",      dest: "{{ kubelet_dir }}/{{ hostname }}.pem",       owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 },
   { src: "certs/{{ env }}/k8s-certs/ca.pem",                  dest: "{{ k8s_certs }}/ca.pem",                     owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 600 }
-
 ]
 
 configs: [
-  { src: "certs/{{ env }}/k8s-certs/{{ hostname }}.kubeconfig",  dest: "{{ kubelet_dir }}",  owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 }
+  { src: "certs/{{ env }}/k8s-certs/{{ hostname }}.kubeconfig",  dest: "{{ kubelet_dir }}/{{ hostname }}.kubeconfig", owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 },
+  { src: "certs/{{ env }}/k8s-certs/kube-proxy.kubeconfig",      dest: "{{ kube_proxy_dir }}/kubeconfig",             owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 }
+]
+
+service_configs: [
+  { src: "roles/{{ role_name }}/templates/kube-proxy.yml.j2",    dest: "{{ kube_proxy_dir }}/kube-proxy.yml", owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 }
 ]
 
 services: [
   { name: "kube-proxy" },
   { name: "kubelet" }
 ]
+
+
+#apiVersion: rbac.authorization.k8s.io/v1
+#kind: ClusterRoleBinding
+#metadata:
+#  name: kubeadm:node-proxier
+#roleRef:
+#  apiGroup: rbac.authorization.k8s.io
+#  kind: ClusterRole
+#  name: system:node-proxier
+#subjects:
+#- kind: ServiceAccount
+#  name: kube-proxy
+#  namespace: kube-system#

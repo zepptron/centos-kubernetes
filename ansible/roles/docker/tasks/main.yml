@@ -1,20 +1,24 @@
 ---
 
 - name: Ensure swap is disabled
+  when: worker is defined
   command: swapoff -a
   tags: [docker]
 
 - name: Adding Docker Repo
+  when: worker is defined
   shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
   tags: [docker]
 
 - name: Installing docker...
+  when: worker is defined
   yum:
     name: docker-ce-{{ docker_version }}
     state: present
   tags: [docker]
 
 - name: Ensure all needed directories are present
+  when: worker is defined
   file:
     state: directory
     path: "{{ item.path }}"
@@ -25,6 +29,7 @@
   tags: [docker]
 
 - name: Replace default Docker systemd file
+  when: worker is defined
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
@@ -33,14 +38,12 @@
     mode: "{{ item.mode }}"
   with_items: "{{ configs }}"
   tags: [docker]
-
-- name: Ensure systemd is reloaded
-  systemd: daemon_reload=yes
-  tags: [docker]
   
 - name: Restarting and enabling Docker...
+  when: worker is defined
   systemd:
     name: docker.service
     state: restarted
     enabled: True
+    daemon_reload: yes
   tags: [docker]

@@ -5,7 +5,7 @@ domain: "foo.io"
 env: "vagrant"
 ip: "{{ ansible_eth1.ipv4.address }}"
 hostname: "{{ ansible_hostname }}"
-cgroupdriver: "systemd"
+cgroupdriver: "cgroupfs"
 
 # User vars
 app_user: "zepp"

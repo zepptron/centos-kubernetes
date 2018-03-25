@@ -11,6 +11,7 @@
   unarchive:
     src: /tmp/etcd.tar.gz
     dest: /tmp/
+    remote_src: yes
   tags: [etcd]
 
 - name: Ensure all needed directories are present

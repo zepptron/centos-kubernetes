@@ -71,6 +71,17 @@
   with_items: "{{ systemd_units }}"
   tags: [k8s-worker]
 
+- name: Ensure all needed service-configs are present
+  when: worker is defined
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ service_configs }}"
+  tags: [k8s-worker]
+
 - name: Ensure services have restarted
   when: worker is defined
   systemd:
@@ -80,23 +91,3 @@
     daemon_reload: yes
   with_items: "{{ services }}"
   tags: [k8s-worker]
-
-
-
-
-
-
-#- name: Download CNI
-#  when: worker is defined
-#  get_url:
-#    url: https://github.com/containernetworking/plugins/releases/download/{{ cni_version }}/cni-plugins-amd64-{{ cni_version }}.tgz
-#    dest: /tmp/cni.tgz
-#  tags: [k8s-worker]
-#
-#- name: Extract CNI into /tmp
-#  when: worker is defined
-#  unarchive:
-#    src: /tmp/cni.tgz
-#    dest: /tmp/
-#    remote_src: yes
-#  tags: [k8s-worker]

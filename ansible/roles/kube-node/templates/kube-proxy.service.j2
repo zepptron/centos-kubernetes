@@ -3,11 +3,7 @@ Description=Kubernetes Kube Proxy
 Documentation=https://github.com/kubernetes/kubernetes
 
 [Service]
-ExecStart=/bin/kube-proxy \
-  --cluster-cidr={{ pod_cidr }} \
-  --kubeconfig={{ kubelet_dir }}/{{ hostname }}.kubeconfig
-  --proxy-mode=iptables \
-  --v=2
+ExecStart=/bin/kube-proxy --config={{ kube_proxy_dir }}/kube-proxy.yml
 Restart=on-failure
 RestartSec=5
 

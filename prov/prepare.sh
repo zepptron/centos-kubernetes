@@ -50,3 +50,6 @@ echo 1 > /proc/sys/net/ipv6/conf/default/disable_ipv6
 echo "Disable IPv6 Support (persistant)"
 echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
 echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+echo "net.bridge.bridge-nf-call-iptables = 1" >> /etc/sysctl.conf
+
+modprobe br_netfilter # this is set for the proxy
