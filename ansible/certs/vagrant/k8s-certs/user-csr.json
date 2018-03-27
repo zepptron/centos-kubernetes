@@ -1,5 +1,5 @@
 {
-  "CN": "Kubernetes",
+  "CN": "dulli",
   "key": {
     "algo": "rsa",
     "size": 2048
@@ -8,7 +8,7 @@
     {
       "C": "DE",
       "L": "munich",
-      "O": "Kubernetes",
+      "O": "system:dulli",
       "OU": "muc",
       "ST": "bavaria"
     }
