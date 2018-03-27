@@ -23,7 +23,7 @@ Vagrant.configure("2") do |config|
 		d.vm.provision :shell, path: "prov/tools.sh"	# ansible
 		d.vm.provision :shell, inline: 'PYTHONUNBUFFERED=1 ansible-playbook /vagrant/ansible/init.yml -c local'
 		d.vm.provider "virtualbox" do |v|
-			v.memory = 1024
+			v.memory = 2048
 		end
 	end
 
@@ -33,7 +33,7 @@ Vagrant.configure("2") do |config|
 			machine.vm.hostname = "kube-#{machine_id}.foo.io"
 			machine.vm.network(:private_network, { ip: "172.16.0.#{10+machine_id}" })
 			machine.vm.provider "virtualbox" do |v|
-				v.memory = 512
+				v.memory = 1024
 			end
 		end
 	end
