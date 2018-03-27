@@ -67,7 +67,7 @@ cfssl gencert \
 
 cat > user-csr.json <<EOF
 {
-  "CN": "user",
+  "CN": "dulli",
   "key": {
     "algo": "rsa",
     "size": 2048
@@ -76,7 +76,7 @@ cat > user-csr.json <<EOF
     {
       "C": "DE",
       "L": "munich",
-      "O": "system:users",
+      "O": "system:dulli",
       "OU": "muc",
       "ST": "bavaria"
     }
@@ -230,23 +230,21 @@ kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
 
 #######################################
 
-### CALICO
+### KUBECTL config
 
-kubectl config set-cluster kubernetes \
+kubectl config set-cluster dummy \
   --certificate-authority=ca.pem \
   --embed-certs=true \
-  --server=https://172.16.0.10:6443 \
-  --kubeconfig=calico.kubeconfig
+  --server=https://172.16.0.10:6443
 
-kubectl config set-credentials calico \
-  --client-certificate=kubernetes.pem \
-  --client-key=kubernetes-key.pem \
-  --embed-certs=true \
-  --kubeconfig=calico.kubeconfig
+kubectl config set-credentials dulli \
+  --client-certificate=user.pem \
+  --client-key=user-key.pem
 
-kubectl config set-context default \
-  --cluster=kubernetes \
-  --user=calico \
-  --kubeconfig=calico.kubeconfig
+kubectl config set-context dummy \
+  --cluster=dummy \
+  --user=dulli
 
-kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
+kubectl config use-context dummy
+
+
