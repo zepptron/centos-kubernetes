@@ -11,7 +11,7 @@ metadata:
 spec:
   selector:
     k8s-app: kube-dns
-  clusterIP: 10.10.12.10
+  clusterIP: 10.10.0.2
   ports:
   - name: dns
     port: 53
@@ -37,7 +37,7 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: EnsureExists
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kube-dns
@@ -75,7 +75,7 @@ spec:
           optional: true
       containers:
       - name: kubedns
-        image: k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.8
+        image: gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.7
         resources:
           # TODO: Set memory limits when we've profiled the container for large
           # clusters, then set request = limit to keep this container in
@@ -108,7 +108,6 @@ spec:
         - --domain=cluster.local.
         - --dns-port=10053
         - --config-dir=/kube-dns-config
-        - --kube-master-url=https://172.16.0.10:6443
         - --v=2
         env:
         - name: PROMETHEUS_PORT
@@ -127,7 +126,7 @@ spec:
         - name: kube-dns-config
           mountPath: /kube-dns-config
       - name: dnsmasq
-        image: k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.14.8
+        image: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.7
         livenessProbe:
           httpGet:
             path: /healthcheck/dnsmasq
