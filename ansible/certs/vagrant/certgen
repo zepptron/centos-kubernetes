@@ -1,0 +1,252 @@
+cat > ca-config.json <<EOF
+{
+  "signing": {
+    "default": {
+      "expiry": "8760h"
+    },
+    "profiles": {
+      "kubernetes": {
+        "usages": ["signing", "key encipherment", "server auth", "client auth"],
+        "expiry": "8760h"
+      }
+    }
+  }
+}
+EOF
+
+cat > ca-csr.json <<EOF
+{
+  "CN": "Kubernetes",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "DE",
+      "L": "munich",
+      "O": "Kubernetes",
+      "OU": "muc",
+      "ST": "bavaria"
+    }
+  ]
+}
+EOF
+
+cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+
+#######################################
+
+cat > admin-csr.json <<EOF
+{
+  "CN": "admin",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "DE",
+      "L": "munich",
+      "O": "system:masters",
+      "OU": "muc",
+      "ST": "bavaria"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  admin-csr.json | cfssljson -bare admin
+
+#######################################
+
+cat > user-csr.json <<EOF
+{
+  "CN": "user",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "DE",
+      "L": "munich",
+      "O": "system:users",
+      "OU": "muc",
+      "ST": "bavaria"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  user-csr.json | cfssljson -bare user
+
+#######################################
+
+for instance in kube-1.foo.io; do
+cat > ${instance}-csr.json <<EOF
+{
+  "CN": "system:node:${instance}",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "DE",
+      "L": "munich",
+      "O": "system:nodes",
+      "OU": "muc",
+      "ST": "bavaria"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -hostname=${instance},172.16.0.11,172.16.0.11 \
+  -profile=kubernetes \
+  ${instance}-csr.json | cfssljson -bare ${instance}
+done
+
+
+#######################################
+
+cat > kube-proxy-csr.json <<EOF
+{
+  "CN": "system:kube-proxy",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "DE",
+      "L": "munich",
+      "O": "system:node-proxier",
+      "OU": "muc",
+      "ST": "bavaria"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  kube-proxy-csr.json | cfssljson -bare kube-proxy
+
+#######################################
+
+
+cat > kubernetes-csr.json <<EOF
+{
+  "CN": "kubernetes",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "DE",
+      "L": "munich",
+      "O": "Kubernetes",
+      "OU": "muc",
+      "ST": "bavaria"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -hostname=10.10.0.1,172.16.0.10,172.16.0.11,172.16.0.12,127.0.0.1,kubernetes.default \
+  -profile=kubernetes \
+  kubernetes-csr.json | cfssljson -bare kubernetes
+
+### 10.10.0.1 => service cidr!
+
+#######################################
+
+for instance in kube-1.foo.io kube-2.foo.io kube-3.foo.io; do
+  kubectl config set-cluster kubernetes \
+    --certificate-authority=ca.pem \
+    --embed-certs=true \
+    --server=https://172.16.0.10:6443 \
+    --kubeconfig=${instance}.kubeconfig
+
+  kubectl config set-credentials system:node:${instance} \
+    --client-certificate=${instance}.pem \
+    --client-key=${instance}-key.pem \
+    --embed-certs=true \
+    --kubeconfig=${instance}.kubeconfig
+
+  kubectl config set-context default \
+    --cluster=kubernetes \
+    --user=system:node:${instance} \
+    --kubeconfig=${instance}.kubeconfig
+
+  kubectl config use-context default --kubeconfig=${instance}.kubeconfig
+done
+
+#######################################
+
+kubectl config set-cluster kubernetes \
+  --certificate-authority=ca.pem \
+  --embed-certs=true \
+  --server=https://172.16.0.10:6443 \
+  --kubeconfig=kube-proxy.kubeconfig
+
+kubectl config set-credentials kube-proxy \
+  --client-certificate=kube-proxy.pem \
+  --client-key=kube-proxy-key.pem \
+  --embed-certs=true \
+  --kubeconfig=kube-proxy.kubeconfig
+
+kubectl config set-context default \
+  --cluster=kubernetes \
+  --user=kube-proxy \
+  --kubeconfig=kube-proxy.kubeconfig
+
+kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
+
+
+#######################################
+
+### CALICO
+
+kubectl config set-cluster kubernetes \
+  --certificate-authority=ca.pem \
+  --embed-certs=true \
+  --server=https://172.16.0.10:6443 \
+  --kubeconfig=calico.kubeconfig
+
+kubectl config set-credentials calico \
+  --client-certificate=kubernetes.pem \
+  --client-key=kubernetes-key.pem \
+  --embed-certs=true \
+  --kubeconfig=calico.kubeconfig
+
+kubectl config set-context default \
+  --cluster=kubernetes \
+  --user=calico \
+  --kubeconfig=calico.kubeconfig
+
+kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
