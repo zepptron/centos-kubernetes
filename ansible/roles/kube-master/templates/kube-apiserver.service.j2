@@ -4,9 +4,11 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 After=network.target
 After=etcd.service
 
+# https://kubernetes.io/docs/admin/admission-controllers/#what-does-each-admission-controller-do
+
 [Service]
 ExecStart=/bin/kube-apiserver \
-  --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \
+  --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,ResourceQuota,DenyEscalatingExec \
   --advertise-address={{ ip }} \
   --secure-port={{ k8s_api_port }} \
   --allow-privileged=true \
