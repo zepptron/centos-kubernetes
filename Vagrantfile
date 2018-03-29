@@ -13,7 +13,9 @@ Vagrant.configure("2") do |config|
 	else
 		config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ".git/"
 	end
-
+	if Vagrant.has_plugin?("vagrant-timezone")
+		config.timezone.value = "CET"
+  	end
 	config.ssh.insert_key = false
 
 	# masterblaster:
