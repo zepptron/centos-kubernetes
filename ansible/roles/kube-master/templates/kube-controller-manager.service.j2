@@ -18,6 +18,7 @@ ExecStart=/bin/kube-controller-manager \
   --service-sync-period=2s \
   --deployment-controller-sync-period=2s \
   --allocate-node-cidrs=false \
+  --experimental-cluster-signing-duration=30m0s \
   --v=2
 Restart=on-failure
 RestartSec=5
