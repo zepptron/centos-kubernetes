@@ -84,3 +84,65 @@ spec:
       memory: 1Gi
       cpu: 1
     type: Container
+
+---
+# A ClusterRole which instructs the CSR approver to approve a node renewing its
+# own client credentials.
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: approve-node-client-renewal-csr
+rules:
+- apiGroups: ["certificates.k8s.io"]
+  resources: ["certificatesigningrequests/selfnodeclient"]
+  verbs: ["create"]
+---
+# A ClusterRole which instructs the CSR approver to approve a node requesting a
+# serving cert matching its client cert.
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: approve-node-server-renewal-csr
+rules:
+- apiGroups: ["certificates.k8s.io"]
+  resources: ["certificatesigningrequests/selfnodeserver"]
+  verbs: ["create"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: node1-client-cert-renewal
+subjects:
+- kind: User
+  name: system:node:kube-1.foo.io # Let "node-1" renew its client certificate.
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: approve-node-client-renewal-csr
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: node2-client-cert-renewal
+subjects:
+- kind: User
+  name: system:node:kube-2.foo.io # Let "node-1" renew its client certificate.
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: approve-node-client-renewal-csr
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: node3-client-cert-renewal
+subjects:
+- kind: User
+  name: system:node:kube-3.foo.io # Let "node-1" renew its client certificate.
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: approve-node-client-renewal-csr
+  apiGroup: rbac.authorization.k8s.io
