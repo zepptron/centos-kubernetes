@@ -1,0 +1,19 @@
+{
+    "CN": "kube-2.foo.io",
+    "hosts": [
+        "kube-2.foo.io",
+        "172.16.0.12"
+    ],
+    "key": {
+        "algo": "ecdsa",
+        "size": 256
+    },
+    "names": [
+        {
+            "C": "US",
+            "L": "CA",
+            "ST": "San Francisco"
+        }
+    ]
+}
+
