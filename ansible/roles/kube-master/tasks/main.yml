@@ -1,23 +1,5 @@
 ---
 
-- name: Ensure all k8s related groups are created
-  when: master is defined
-  group:
-    name: "{{ item.name }}"
-    gid: "{{ item.gid }}"
-  with_items: "{{ k8s_groups }}"
-  tags: [k8s-master]
-
-- name: Ensure all k8s related users are created and added to the requiered groups
-  when: master is defined
-  user:
-    name: "{{ item.name }}"
-    uid: "{{ item.uid }}"
-    group: "{{ item.groups }}"
-    groups: "{{ item.groups }}"
-  with_items: "{{ k8s_users }}"
-  tags: [k8s-master]
-
 - name: Ensure all needed directories are present
   when: master is defined
   file:
