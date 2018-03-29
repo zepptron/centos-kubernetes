@@ -7,10 +7,10 @@ docker_version: "17.06.2.ce"
 docker_dir: "/etc/docker"
 
 directories: [
-  { path: "{{ docker_dir }}",         owner: "{{ app_user }}", group: "{{ app_group }}", mode: 664 }
+  { path: "{{ docker_dir }}", owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 774 }
 ]
 
 configs: [
-  { src: "roles/{{ role_name }}/templates/daemon.json.j2",    dest: "/etc/{{ role_name }}/daemon.json",       owner: "{{ app_user }}",  group: "{{ app_group }}",   mode: 644 },
-  { src: "roles/{{ role_name }}/templates/docker.service.j2", dest: "/usr/lib/systemd/system/docker.service", owner: "root",            group: "root",              mode: 644 }
+  { src: "roles/{{ role_name }}/templates/daemon.json.j2",    dest: "/etc/{{ role_name }}/daemon.json",       owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 },
+  { src: "roles/{{ role_name }}/templates/docker.service.j2", dest: "/usr/lib/systemd/system/docker.service", owner: "root",            group: "root",             mode: 664 }
 ]
