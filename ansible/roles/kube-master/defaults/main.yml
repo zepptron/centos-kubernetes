@@ -46,3 +46,8 @@ services: [
   { name: "kube-controller-manager" },
   { name: "kube-scheduler" }
 ]
+
+bashrc: [
+  { path: "/root/.bashrc" },
+  { path: "home/{{ app_user }}/.bashrc" }
+]

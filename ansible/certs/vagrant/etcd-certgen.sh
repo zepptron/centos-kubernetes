@@ -1,4 +1,3 @@
-INSTANCES="kube-1.foo.io kube-2.foo.io kube-3.foo.io"   # list of workers (no comma)
 ETCD="172.16.0.10 172.16.0.11 172.16.0.12"
 CERT="k8s-certs"  # folder for certs
 REST=${CERT}"/rip"  # folder for CSR and JSON files

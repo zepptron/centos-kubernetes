@@ -57,7 +57,7 @@
 - name: insert ~/.bashrc hacks for good times
   when: master is defined
   blockinfile:
-    path: /root/.bashrc
+    path: "{{ path }}"
     block: |
       source <(kubectl completion bash)
 
@@ -82,6 +82,7 @@
           kubectl describe node $i.foo.io | grep -A4 "Allocated resources:"
         done
       }
+  with_items: "{{ bashrc }}"
   tags: [k8s-master]
 
 # executing clusterroles.yml in files/ from to access the kubelets

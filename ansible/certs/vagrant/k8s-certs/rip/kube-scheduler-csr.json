@@ -1,5 +1,5 @@
 {
-  "CN": "Kubernetes",
+  "CN": "system:kube-scheduler",
   "key": {
     "algo": "rsa",
     "size": 2048
@@ -8,7 +8,7 @@
     {
       "C": "DE",
       "L": "munich",
-      "O": "Kubernetes",
+      "O": "system:masters",
       "OU": "muc",
       "ST": "bavaria"
     }
