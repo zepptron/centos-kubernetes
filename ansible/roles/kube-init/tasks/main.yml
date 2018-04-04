@@ -1,0 +1,10 @@
+
+- name: Ensure Kubernetes Defaults are set (Roles + Ressourcelimits)
+  when: controller is defined
+  shell: kubectl apply -f /vagrant/ansible/roles/kube-init/files/k8s-init.yml
+  tags: [lkube-init]
+
+- name: Ensure ETCD secret is applied
+  when: controller is defined
+  shell: kubectl apply -f /vagrant/ansible/certs/vagrant/k8s-certs/etcd-secret.yml
+  tags: [kube-init]

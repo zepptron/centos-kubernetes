@@ -21,6 +21,10 @@ REST=${CERT}"/rip"  # folder for CSR and JSON files
 break="================================="
 
 
+#####################################################################################  
+#################################### generate CA #################################### 
+#####################################################################################
+
 echo "${break}"
 echo "adding folders if not present"
 
@@ -96,6 +100,10 @@ EOF
 cfssl gencert -initca ${REST}/ca-csr.json | cfssljson -bare ${CERT}/ca
 
 
+#####################################################################################  
+############################### generate kubectl certs ############################## 
+#####################################################################################
+
 echo "${break}"
 echo "generate cert for admin access (kubectl)"
 
@@ -152,6 +160,11 @@ cfssl gencert \
   -config=${REST}/ca-config.json \
   -profile=kubernetes \
   ${REST}/user-csr.json | cfssljson -bare ${CERT}/user
+
+
+#####################################################################################  
+############################## generate kube corecerts ############################## 
+#####################################################################################
 
 
 echo "${break}"
@@ -218,6 +231,64 @@ cfssl gencert \
 
 
 echo "${break}"
+echo "generate kube-scheduler cert"
+
+cat > ${REST}/kube-scheduler-csr.json <<EOF
+{
+  "CN": "system:kube-scheduler",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "${C}",
+      "L": "${L}",
+      "O": "system:masters",
+      "OU": "${OU}",
+      "ST": "${ST}"
+    }
+  ]
+}
+EOF
+cfssl gencert \
+  -ca=${CERT}/ca.pem \
+  -ca-key=${CERT}/ca-key.pem \
+  -config=${REST}/ca-config.json \
+  -profile=kubernetes \
+  ${REST}/kube-scheduler-csr.json | cfssljson -bare ${CERT}/kube-scheduler
+
+
+echo "${break}"
+echo "generate kube-controller-manager cert"
+
+cat > ${REST}/kube-controller-manager-csr.json <<EOF
+{
+  "CN": "system:kube-controller-manager",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "${C}",
+      "L": "${L}",
+      "O": "system:masters",
+      "OU": "${OU}",
+      "ST": "${ST}"
+    }
+  ]
+}
+EOF
+cfssl gencert \
+  -ca=${CERT}/ca.pem \
+  -ca-key=${CERT}/ca-key.pem \
+  -config=${REST}/ca-config.json \
+  -profile=kubernetes \
+  ${REST}/kube-controller-manager-csr.json | cfssljson -bare ${CERT}/kube-controller-manager
+
+
+echo "${break}"
 echo "generating kubernetes API cert (adjust when deployed as HA!)"
 
 cat > ${REST}/kubernetes-csr.json <<EOF
@@ -249,6 +320,10 @@ cfssl gencert \
 ### 10.10.0.1 => service cidr!
 ### 172.16.0.1* = API Servers! If deployed in HA, add them!
 
+
+#####################################################################################  
+################################ generate kubeconfig ################################ 
+#####################################################################################
 
 echo "${break}"
 echo "generating .kubeconfig for nodes"
@@ -299,6 +374,56 @@ kubectl config use-context default --kubeconfig=${CERT}/kube-proxy.kubeconfig
 
 
 echo "${break}"
+echo "generating .kubeconfig for kube-scheduler"
+
+kubectl config set-cluster kubernetes \
+  --certificate-authority=${CERT}/ca.pem \
+  --embed-certs=true \
+  --server=${API} \
+  --kubeconfig=${CERT}/kube-scheduler.kubeconfig
+
+kubectl config set-credentials kube-scheduler \
+  --client-certificate=${CERT}/kube-scheduler.pem \
+  --client-key=${CERT}/kube-scheduler-key.pem \
+  --embed-certs=true \
+  --kubeconfig=${CERT}/kube-scheduler.kubeconfig
+
+kubectl config set-context default \
+  --cluster=kubernetes \
+  --user=kube-scheduler \
+  --kubeconfig=${CERT}/kube-scheduler.kubeconfig
+
+kubectl config use-context default --kubeconfig=${CERT}/kube-scheduler.kubeconfig
+
+
+echo "${break}"
+echo "generating .kubeconfig for kube-controller-manager"
+
+kubectl config set-cluster kubernetes \
+  --certificate-authority=${CERT}/ca.pem \
+  --embed-certs=true \
+  --server=${API} \
+  --kubeconfig=${CERT}/kube-controller-manager.kubeconfig
+
+kubectl config set-credentials kube-controller-manager \
+  --client-certificate=${CERT}/kube-controller-manager.pem \
+  --client-key=${CERT}/kube-controller-manager-key.pem \
+  --embed-certs=true \
+  --kubeconfig=${CERT}/kube-controller-manager.kubeconfig
+
+kubectl config set-context default \
+  --cluster=kubernetes \
+  --user=kube-controller-manager \
+  --kubeconfig=${CERT}/kube-controller-manager.kubeconfig
+
+kubectl config use-context default --kubeconfig=${CERT}/kube-controller-manager.kubeconfig
+
+
+#####################################################################################  
+############################## external kubectl access ############################## 
+#####################################################################################
+
+echo "${break}"
 echo "KUBECTL config for external access"
 
 kubectl config set-cluster dummy \
@@ -315,7 +440,133 @@ kubectl config set-context dummy \
   --user=dulli
 
 
+#####################################################################################  
+################################ generate ETCD certs ################################ 
+#####################################################################################
+
+echo "${break}"
+echo "generating ETCD server certs"
+
+N=0
+for instance in ${ETCD}; do
+N=$[$N +1]
+cat > ${REST}/server-etcd-0${N}.json <<EOF 
+{
+  "CN": "${instance}",
+  "key": {
+      "algo": "ecdsa",
+      "size": 256
+  },
+  "hosts": [
+      "${instance}",
+      "etcd-0${N}.local"
+  ],
+  "names": [
+    {
+      "C": "${C}",
+      "L": "${L}",
+      "ST": "${ST}"
+    }
+  ]
+}
+EOF
+cfssl gencert \
+  -ca=${CERT}/ca.pem \
+  -ca-key=${CERT}/ca-key.pem \
+  -config=${REST}/ca-config.json \
+  -profile=etcd-server \
+  ${REST}/server-etcd-0${N}.json | cfssljson -bare ${CERT}/server-etcd-0${N}
+done
+
+echo "${break}"
+echo "generating ETCD member certs"
+
+N=0
+for instance in ${ETCD}; do
+N=$[$N +1]
+cat > ${REST}/peer-etcd-0${N}.json <<EOF 
+{
+  "CN": "${instance}",
+  "key": {
+      "algo": "ecdsa",
+      "size": 256
+  },
+  "hosts": [
+      "${instance}",
+      "peer-0${N}.local",
+      "peer-0${N}"
+  ],
+  "names": [
+    {
+      "C": "${C}",
+      "L": "${L}",
+      "ST": "${ST}"
+    }
+  ]
+}
+EOF
+cfssl gencert \
+  -ca=${CERT}/ca.pem \
+  -ca-key=${CERT}/ca-key.pem \
+  -config=${REST}/ca-config.json \
+  -profile=etcd-peer \
+  ${REST}/peer-etcd-0${N}.json | cfssljson -bare ${CERT}/peer-etcd-0${N}
+done
+
+echo "${break}"
+echo "generating ETCD client cert"
+
+cat > ${REST}/etcd-client.json <<EOF 
+{
+    "CN": "client",
+    "hosts": [""],
+    "key": {
+        "algo": "ecdsa",
+        "size": 256
+    }
+}
+EOF
+cfssl gencert \
+  -ca=${CERT}/ca.pem \
+  -ca-key=${CERT}/ca-key.pem \
+  -config=${REST}/ca-config.json \
+  -profile=etcd-client \
+  ${REST}/etcd-client.json | cfssljson -bare ${CERT}/etcd-client
+
+
+#####################################################################################  
+###################################### cleanup ###################################### 
+#####################################################################################
+
 echo "${break}"
 echo "clean up *.csr / *.json stuff"
 
 mv ${CERT}/*.csr ${REST}/ 
+
+
+#####################################################################################  
+################################# kubernetes secret ################################# 
+#####################################################################################
+
+echo "${break}"
+echo "Generate base64 encoded etcd secret"
+
+key="$(base64 < ${CERT}/etcd-client-key.pem)";
+cert="$(base64 < ${CERT}/etcd-client.pem)";
+ca="$(base64 < ${CERT}/ca.pem)";
+
+cat > ${CERT}/etcd-secret.yml <<EOF
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: calico-etcd-secrets
+  namespace: kube-system
+data: 
+  etcd-key: "${key}"
+  etcd-cert: "${cert}"
+  etcd-ca: "${ca}"
+EOF
+
+echo "done."
+echo "${break}"

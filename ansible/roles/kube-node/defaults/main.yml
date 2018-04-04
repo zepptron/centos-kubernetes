@@ -48,7 +48,7 @@ configs: [
 ]
 
 service_configs: [
-  { src: "roles/{{ role_name }}/templates/kube-proxy.yml.j2",    dest: "{{ kube_proxy_dir }}/kube-proxy.yml", owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 }
+  { src: "roles/{{ role_name }}/templates/kube-proxy.yml.j2", dest: "{{ kube_proxy_dir }}/kube-proxy.yml", owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 }
 ]
 
 services: [

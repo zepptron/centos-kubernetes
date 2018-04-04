@@ -7,7 +7,7 @@
     owner: "{{ item.owner }}"
     group: "{{ item.group }}"
   with_items: "{{ directories }}"
-  tags: [k8s-worker]
+  tags: [kube-node]
 
 - name: Ensure all needed binarys are present
   when: worker is defined
@@ -18,7 +18,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ binarys }}"
-  tags: [k8s-worker]
+  tags: [kube-node]
 
 - name: Ensure all needed configs are present
   when: worker is defined
@@ -29,7 +29,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ configs }}"
-  tags: [k8s-worker]
+  tags: [kube-node]
 
 - name: Ensure all k8s related certificates are present
   when: worker is defined
@@ -40,7 +40,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ certs }}"
-  tags: [k8s-worker]
+  tags: [kube-node]
 
 - name: Ensure all needed systemd unitfiles are present
   when: worker is defined
@@ -51,7 +51,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ systemd_units }}"
-  tags: [k8s-worker]
+  tags: [kube-node]
 
 - name: Ensure all needed service-configs are present
   when: worker is defined
@@ -62,7 +62,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ service_configs }}"
-  tags: [k8s-worker]
+  tags: [kube-node]
 
 - name: Ensure services have restarted
   when: worker is defined
@@ -72,4 +72,4 @@
     enabled: True
     daemon_reload: yes
   with_items: "{{ services }}"
-  tags: [k8s-worker]
+  tags: [kube-node]

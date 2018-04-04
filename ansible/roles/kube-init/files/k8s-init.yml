@@ -33,6 +33,7 @@ subjects:
     kind: User
     name: kubernetes
 ---
+### RBAC role for kubectl reading rights in default namespace
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:

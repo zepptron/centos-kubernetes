@@ -7,10 +7,12 @@
     owner: root
     group: root
     mode: 0644
+  tags: [vagrant]
 
 - name: Ensure the Hostname is set
   hostname:
     name: "{{ hostname }}"
+  tags: [vagrant]
 
 - name: Ensure bash aliases are set
   blockinfile:
@@ -24,3 +26,4 @@
       
       alias ll="ls -lah"
       alias k="kubectl"
+  tags: [vagrant]
