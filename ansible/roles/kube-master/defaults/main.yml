@@ -34,11 +34,20 @@ systemd_units: [
 ]
 
 certs: [
-  { src: "certs/{{ env }}/k8s-certs/admin.pem",          dest: "{{ k8s_certs }}/admin.pem",          owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
-  { src: "certs/{{ env }}/k8s-certs/ca.pem",             dest: "{{ k8s_certs }}/ca.pem",             owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
-  { src: "certs/{{ env }}/k8s-certs/ca-key.pem",         dest: "{{ k8s_certs }}/ca-key.pem",         owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
-  { src: "certs/{{ env }}/k8s-certs/kubernetes.pem",     dest: "{{ k8s_certs }}/kubernetes.pem",     owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
-  { src: "certs/{{ env }}/k8s-certs/kubernetes-key.pem", dest: "{{ k8s_certs }}/kubernetes-key.pem", owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 }
+  { src: "certs/{{ env }}/k8s-certs/admin.pem",                         dest: "{{ k8s_certs }}/admin.pem",                        owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
+  { src: "certs/{{ env }}/k8s-certs/ca.pem",                            dest: "{{ k8s_certs }}/ca.pem",                           owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
+  { src: "certs/{{ env }}/k8s-certs/ca-key.pem",                        dest: "{{ k8s_certs }}/ca-key.pem",                       owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
+  { src: "certs/{{ env }}/k8s-certs/kubernetes.pem",                    dest: "{{ k8s_certs }}/kubernetes.pem",                   owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
+  { src: "certs/{{ env }}/k8s-certs/kubernetes-key.pem",                dest: "{{ k8s_certs }}/kubernetes-key.pem",               owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 }
+#  { src: "certs/{{ env }}/k8s-certs/kube-scheduler-key.pem",            dest: "{{ k8s_certs }}/kube-scheduler-key.pem",           owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
+#  { src: "certs/{{ env }}/k8s-certs/kube-scheduler.pem",                dest: "{{ k8s_certs }}/kube-scheduler.pem",               owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
+#  { src: "certs/{{ env }}/k8s-certs/kube-controller-manager-key.pem",   dest: "{{ k8s_certs }}/kube-controller-manager-key.pem",  owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 },
+#  { src: "certs/{{ env }}/k8s-certs/kube-controller-manager.pem",       dest: "{{ k8s_certs }}/kube-controller-manager.pem",      owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 660 }
+]
+
+configs: [
+  { src: "certs/{{ env }}/k8s-certs/kube-scheduler.kubeconfig",           dest: "{{ k8s_certs }}/kube-scheduler.kubeconfig",          owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 },
+  { src: "certs/{{ env }}/k8s-certs/kube-controller-manager.kubeconfig",  dest: "{{ k8s_certs }}/kube-controller-manager.kubeconfig", owner: "{{ kube_user }}", group: "{{ kube_group }}", mode: 664 }
 ]
 
 services: [
@@ -49,5 +58,5 @@ services: [
 
 bashrc: [
   { path: "/root/.bashrc" },
-  { path: "home/{{ app_user }}/.bashrc" }
+  { path: "/home/{{ app_user }}/.bashrc" }
 ]

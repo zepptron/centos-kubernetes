@@ -9,7 +9,7 @@
     owner: "{{ item.owner }}"
     group: "{{ item.group }}"
   with_items: "{{ directories }}"
-  tags: [k8s-master]
+  tags: [kube-master]
 
 - name: Ensure all needed binarys are present
   when: master is defined
@@ -20,7 +20,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ binarys }}"
-  tags: [k8s-master]
+  tags: [kube-master]
 
 - name: Ensure all k8s related certificates are present
   when: master is defined
@@ -31,7 +31,18 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ certs }}"
-  tags: [k8s-master]
+  tags: [kube-master]
+
+- name: Ensure all needed configs are present
+  when: master is defined
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ configs }}"
+  tags: [kube-master]
 
 - name: Ensure all needed systemd unitfiles are present
   when: master is defined
@@ -42,7 +53,7 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
   with_items: "{{ systemd_units }}"
-  tags: [k8s-master]
+  tags: [kube-master]
 
 - name: Ensure services have restarted
   when: master is defined
@@ -52,12 +63,12 @@
     enabled: True
     daemon_reload: yes
   with_items: "{{ services }}"
-  tags: [k8s-master]
+  tags: [kube-master]
 
 - name: insert ~/.bashrc hacks for good times
   when: master is defined
   blockinfile:
-    path: "{{ path }}"
+    path: "{{ item.path }}"
     block: |
       source <(kubectl completion bash)
 
@@ -83,6 +94,6 @@
         done
       }
   with_items: "{{ bashrc }}"
-  tags: [k8s-master]
+  tags: [kube-master]
 
 # executing clusterroles.yml in files/ from to access the kubelets
