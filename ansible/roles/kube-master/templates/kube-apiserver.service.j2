@@ -8,7 +8,6 @@ After=etcd.service
 
 [Service]
 ExecStart=/bin/kube-apiserver \
-  --admission-control=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,ResourceQuota,DenyEscalatingExec \
   --advertise-address={{ ip }} \
   --secure-port={{ k8s_api_port }} \
   --allow-privileged=true \
@@ -20,12 +19,13 @@ ExecStart=/bin/kube-apiserver \
   --authorization-mode={{ auth_mode }} \
   --bind-address=0.0.0.0 \
   --client-ca-file={{ k8s_certs }}/ca.pem \
+  --enable-garbage-collector=true \
+  --enable-admission-plugins=NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,ResourceQuota,DenyEscalatingExec \
   --etcd-cafile={{ etcd_cert_dir }}/ca.pem \
-  --etcd-certfile={{ etcd_cert_dir }}/client.pem \
-  --etcd-keyfile={{ etcd_cert_dir }}/client-key.pem \
+  --etcd-certfile={{ etcd_cert_dir }}/etcd-client.pem \
+  --etcd-keyfile={{ etcd_cert_dir }}/etcd-client-key.pem \
   --etcd-servers={% for node in groups['etcd'] %}{{ etcd_prot }}://{{ node }}:{{ etcd_client_port }}{% if not loop.last %},{% endif %}{% endfor %} \
   --event-ttl=1h \
-  --insecure-bind-address=127.0.0.1 \
   --kubelet-certificate-authority={{ k8s_certs }}/ca.pem \
   --kubelet-client-certificate={{ k8s_certs }}/kubernetes.pem \
   --kubelet-client-key={{ k8s_certs }}/kubernetes-key.pem \

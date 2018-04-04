@@ -1,5 +1,0 @@
-
-- name: Ensure Kubernetes Defaults are set (Roles + Ressourcelimits)
-  when: controller is defined
-  shell: kubectl apply -f /vagrant/ansible/roles/initk8s/files/k8s-init.yml
-  tags: [init]

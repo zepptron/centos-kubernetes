@@ -47,3 +47,11 @@
     enabled: True
     daemon_reload: yes
   tags: [docker]
+
+- name: Add User to docker group
+  when: worker is defined
+  user:
+    name: "{{ app_user }}"
+    groups: docker
+    append: yes
+  tags: [docker]

@@ -29,6 +29,14 @@
   with_items: "{{ users }}"
   tags: [users]
 
+- name: Ensure all k8s related users are created and added to the requiered groups
+  user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    group: "{{ item.group }}"
+  with_items: "{{ k8s_user }}"
+  tags: [users]
+
 - name: Ensure all needed directories are present
   file:
     state: directory

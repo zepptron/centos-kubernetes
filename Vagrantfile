@@ -13,12 +13,14 @@ Vagrant.configure("2") do |config|
 	else
 		config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ".git/"
 	end
-
+	if Vagrant.has_plugin?("vagrant-timezone")
+		config.timezone.value = "CET"
+  	end
 	config.ssh.insert_key = false
 
 	# masterblaster:
-	config.vm.define "kube-boss" do |d|
-		d.vm.hostname = "kube-boss.foo.io"
+	config.vm.define "kube-0" do |d|
+		d.vm.hostname = "kube-0.foo.io"
 		d.vm.network(:private_network, { ip: "172.16.0.10" })
 		d.vm.provision :shell, path: "prov/tools.sh"	# ansible
 		d.vm.provision :shell, inline: 'PYTHONUNBUFFERED=1 ansible-playbook /vagrant/ansible/init.yml -c local'

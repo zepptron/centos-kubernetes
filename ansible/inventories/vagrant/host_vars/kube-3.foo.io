@@ -5,4 +5,3 @@
 hostname: "kube-3.foo.io"
 
 worker: true
-storage: true

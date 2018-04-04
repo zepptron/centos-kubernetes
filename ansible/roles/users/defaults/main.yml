@@ -1,30 +1,39 @@
 ---
-
-# Used vars and their locations
-# app_group     -> group_vars/all
-# app_user      -> group_vars/all
-# env           -> group_vars/all
-# ssh-keygen -t rsa -b 4096 -f id_rsa_dev
-
-# an array of common groups
-host_groups: [
-  { name: "{{ app_group }}",    gid: "1500" },
-  { name: "{{ docker_group }}", gid: "666" }
-]
-
 # Hint: to create a password use:
 # pip install passlib
 # python -c "from passlib.hash import sha512_crypt; import getpass; print sha512_crypt.using(rounds=5000).hash(getpass.getpass())"
 
-# an array of common users
+# User vars
+app_user: "zepp"
+app_group: "zepp"
+app_uid: "1500"
+app_gid: "1500"
+app_pw: "$6$JNWb59GmBaMmF5v3$Pvhw0fetP4PrgWPc0vlAHYth/6ANbpOCWyCuNajcpu7tKL7k4Dpc6Z59CTfynVbBPhwEEcpMH7rqwTVtxLZe71"
+
+# Kube vars
+kube_user: "kubedude"
+kube_group: "kubegroup"
+kube_uid: "1337"
+kube_gid: "1337"
+
+# an array of common groups
+host_groups: [
+  { name: "{{ app_group }}",    gid: "{{ app_gid }}" },
+  { name: "{{ kube_group }}",   gid: "{{ kube_gid }}" }
+]
+
+# role related arrays, this stuff will be applied
 users: [
-  { name: "{{ app_user }}",  uid: "{{ app_uid }}", group: "{{ app_group }}",   groups: "{{ docker_group }}", password: "{{ app_pw }}" }
+  { name: "{{ app_user }}",  uid: "{{ app_uid }}", group: "{{ app_group }}",   groups: "{{ kube_group }}", password: "{{ app_pw }}" }
+]
+
+k8s_user: [
+  { name: "{{ kube_user }}", uid: "{{ kube_uid }}", group: "{{ kube_group }}" }
 ]
 
 # an array of directories which needs to be created
 directories: [
-  { path: "/home/{{ app_user }}/.ssh",  owner: "{{ app_user }}", group: "{{ app_group }}", mode: 700 },
-  { path: "/data",                      owner: "{{ app_user }}", group: "{{ app_group }}", mode: 775 }
+  { path: "/home/{{ app_user }}/.ssh",  owner: "{{ app_user }}", group: "{{ app_group }}", mode: 775 }
 ]
 
 # dynamically pick ssh keys depending on the environment

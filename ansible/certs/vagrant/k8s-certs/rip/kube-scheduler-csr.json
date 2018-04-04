@@ -1,0 +1,16 @@
+{
+  "CN": "system:kube-scheduler",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "DE",
+      "L": "munich",
+      "O": "system:masters",
+      "OU": "muc",
+      "ST": "bavaria"
+    }
+  ]
+}

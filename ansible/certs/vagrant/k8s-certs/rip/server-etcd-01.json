@@ -1,0 +1,18 @@
+{
+  "CN": "172.16.0.10",
+  "key": {
+      "algo": "ecdsa",
+      "size": 256
+  },
+  "hosts": [
+      "172.16.0.10",
+      "etcd-01.local"
+  ],
+  "names": [
+    {
+      "C": "DE",
+      "L": "munich",
+      "ST": "bavaria"
+    }
+  ]
+}

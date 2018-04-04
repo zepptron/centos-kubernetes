@@ -12,4 +12,4 @@
     - docker
     - kube-master
     - kube-node
-    - initk8s
+    - kube-init
