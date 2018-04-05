@@ -571,14 +571,16 @@ data:
 EOF
 
 echo "done."
-echo "${BREAK}"
 
 
 #####################################################################################  
 ################################### encryptconfig ################################### 
 #####################################################################################
 
-cat > ${CERT}/encryption-config.yaml <<EOF
+echo "${BREAK}"
+echo "generating encryptconfig"
+
+cat > ${CERT}/encryption-config.yml <<EOF
 kind: EncryptionConfig
 apiVersion: v1
 resources:
@@ -592,6 +594,8 @@ resources:
       - identity: {}
 EOF
 
+echo "done."
+
 
 #####################################################################################  
 ###################################### cleanup ###################################### 
@@ -601,3 +605,6 @@ echo "${BREAK}"
 echo "clean up *.csr / *.json stuff"
 
 mv ${CERT}/*.csr ${REST}/ 
+
+echo "done."
+echo "${BREAK}"

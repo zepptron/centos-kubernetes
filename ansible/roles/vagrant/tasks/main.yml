@@ -14,16 +14,14 @@
     name: "{{ hostname }}"
   tags: [vagrant]
 
-- name: Ensure bash aliases are set
-  blockinfile:
-    path: /root/.bashrc
-    block: |
-      ## ENVs ##
-      red=`tput setaf 1`
-      green=`tput setaf 2`
-      yellow=`tput setaf 3`
-      reset=`tput sgr0`
-      
-      alias ll="ls -lah"
-      alias k="kubectl"
+- name: Ensure basic packages are installed for debugging
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+     - net-tools
+     - nano
+     - traceroute
+     - lsof
+     - telnet
   tags: [vagrant]
