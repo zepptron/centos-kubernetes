@@ -18,19 +18,22 @@ ST="bavaria"
 CERT="k8s-certs"  # folder for certs
 REST=${CERT}"/rip"  # folder for CSR and JSON files
 
-break="================================="
+# keygen
+ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
+
+BREAK="================================="
 
 
 #####################################################################################  
 #################################### generate CA #################################### 
 #####################################################################################
 
-echo "${break}"
+echo "${BREAK}"
 echo "adding folders if not present"
 
 mkdir -p ${REST}  
 
-echo "${break}"
+echo "${BREAK}"
 echo "generate CA certs"
 
 cat > ${REST}/ca-config.json <<EOF
@@ -104,7 +107,7 @@ cfssl gencert -initca ${REST}/ca-csr.json | cfssljson -bare ${CERT}/ca
 ############################### generate kubectl certs ############################## 
 #####################################################################################
 
-echo "${break}"
+echo "${BREAK}"
 echo "generate cert for admin access (kubectl)"
 
 cat > ${REST}/admin-csr.json <<EOF
@@ -132,8 +135,7 @@ cfssl gencert \
   -profile=kubernetes \
   ${REST}/admin-csr.json | cfssljson -bare ${CERT}/admin
 
-
-echo "${break}"
+echo "${BREAK}"
 echo "generate cert for useraccess (ext. kubectl)"
 
 cat > ${REST}/user-csr.json <<EOF
@@ -167,7 +169,7 @@ cfssl gencert \
 #####################################################################################
 
 
-echo "${break}"
+echo "${BREAK}"
 echo "generate certs for worker nodes"
 
 N=10
@@ -200,8 +202,7 @@ cfssl gencert \
   ${REST}/${instance}-csr.json | cfssljson -bare ${CERT}/${instance}
 done
 
-
-echo "${break}"
+echo "${BREAK}"
 echo "generate kube-proxy cert"
 
 cat > ${REST}/kube-proxy-csr.json <<EOF
@@ -230,7 +231,7 @@ cfssl gencert \
   ${REST}/kube-proxy-csr.json | cfssljson -bare ${CERT}/kube-proxy
 
 
-echo "${break}"
+echo "${BREAK}"
 echo "generate kube-scheduler cert"
 
 cat > ${REST}/kube-scheduler-csr.json <<EOF
@@ -258,8 +259,7 @@ cfssl gencert \
   -profile=kubernetes \
   ${REST}/kube-scheduler-csr.json | cfssljson -bare ${CERT}/kube-scheduler
 
-
-echo "${break}"
+echo "${BREAK}"
 echo "generate kube-controller-manager cert"
 
 cat > ${REST}/kube-controller-manager-csr.json <<EOF
@@ -287,8 +287,7 @@ cfssl gencert \
   -profile=kubernetes \
   ${REST}/kube-controller-manager-csr.json | cfssljson -bare ${CERT}/kube-controller-manager
 
-
-echo "${break}"
+echo "${BREAK}"
 echo "generating kubernetes API cert (adjust when deployed as HA!)"
 
 cat > ${REST}/kubernetes-csr.json <<EOF
@@ -325,7 +324,7 @@ cfssl gencert \
 ################################ generate kubeconfig ################################ 
 #####################################################################################
 
-echo "${break}"
+echo "${BREAK}"
 echo "generating .kubeconfig for nodes"
 
 for instance in ${INSTANCES}; do
@@ -349,8 +348,7 @@ for instance in ${INSTANCES}; do
   kubectl config use-context default --kubeconfig=${CERT}/${instance}.kubeconfig
 done
 
-
-echo "${break}"
+echo "${BREAK}"
 echo "generating .kubeconfig for kube-proxy"
 
 kubectl config set-cluster kubernetes \
@@ -372,8 +370,7 @@ kubectl config set-context default \
 
 kubectl config use-context default --kubeconfig=${CERT}/kube-proxy.kubeconfig
 
-
-echo "${break}"
+echo "${BREAK}"
 echo "generating .kubeconfig for kube-scheduler"
 
 kubectl config set-cluster kubernetes \
@@ -395,8 +392,7 @@ kubectl config set-context default \
 
 kubectl config use-context default --kubeconfig=${CERT}/kube-scheduler.kubeconfig
 
-
-echo "${break}"
+echo "${BREAK}"
 echo "generating .kubeconfig for kube-controller-manager"
 
 kubectl config set-cluster kubernetes \
@@ -423,8 +419,8 @@ kubectl config use-context default --kubeconfig=${CERT}/kube-controller-manager.
 ############################## external kubectl access ############################## 
 #####################################################################################
 
-echo "${break}"
-echo "KUBECTL config for external access"
+echo "${BREAK}"
+echo "KUBECTL config for external USER access [restricted]"
 
 kubectl config set-cluster dummy \
   --certificate-authority=${CERT}/ca.pem \
@@ -439,12 +435,28 @@ kubectl config set-context dummy \
   --cluster=dummy \
   --user=dulli
 
+echo "${BREAK}"
+echo "KUBECTL config for external ADMIN access [chef]"
+
+kubectl config set-cluster vagrant \
+  --certificate-authority=${CERT}/ca.pem \
+  --embed-certs=true \
+  --server=${API}
+
+kubectl config set-credentials admin \
+  --client-certificate=${CERT}/admin.pem \
+  --client-key=${CERT}/admin-key.pem
+
+kubectl config set-context vagrant \
+  --cluster=vagrant \
+  --user=admin
+
 
 #####################################################################################  
 ################################ generate ETCD certs ################################ 
 #####################################################################################
 
-echo "${break}"
+echo "${BREAK}"
 echo "generating ETCD server certs"
 
 N=0
@@ -478,7 +490,7 @@ cfssl gencert \
   ${REST}/server-etcd-0${N}.json | cfssljson -bare ${CERT}/server-etcd-0${N}
 done
 
-echo "${break}"
+echo "${BREAK}"
 echo "generating ETCD member certs"
 
 N=0
@@ -513,7 +525,7 @@ cfssl gencert \
   ${REST}/peer-etcd-0${N}.json | cfssljson -bare ${CERT}/peer-etcd-0${N}
 done
 
-echo "${break}"
+echo "${BREAK}"
 echo "generating ETCD client cert"
 
 cat > ${REST}/etcd-client.json <<EOF 
@@ -535,20 +547,10 @@ cfssl gencert \
 
 
 #####################################################################################  
-###################################### cleanup ###################################### 
-#####################################################################################
-
-echo "${break}"
-echo "clean up *.csr / *.json stuff"
-
-mv ${CERT}/*.csr ${REST}/ 
-
-
-#####################################################################################  
 ################################# kubernetes secret ################################# 
 #####################################################################################
 
-echo "${break}"
+echo "${BREAK}"
 echo "Generate base64 encoded etcd secret"
 
 key="$(base64 < ${CERT}/etcd-client-key.pem)";
@@ -569,4 +571,40 @@ data:
 EOF
 
 echo "done."
-echo "${break}"
+
+
+#####################################################################################  
+################################### encryptconfig ################################### 
+#####################################################################################
+
+echo "${BREAK}"
+echo "generating encryptconfig"
+
+cat > ${CERT}/encryption-config.yml <<EOF
+kind: EncryptionConfig
+apiVersion: v1
+resources:
+  - resources:
+      - secrets
+    providers:
+      - aescbc:
+          keys:
+            - name: key1
+              secret: ${ENCRYPTION_KEY}
+      - identity: {}
+EOF
+
+echo "done."
+
+
+#####################################################################################  
+###################################### cleanup ###################################### 
+#####################################################################################
+
+echo "${BREAK}"
+echo "clean up *.csr / *.json stuff"
+
+mv ${CERT}/*.csr ${REST}/ 
+
+echo "done."
+echo "${BREAK}"

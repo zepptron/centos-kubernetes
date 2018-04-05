@@ -2,3 +2,4 @@
 .vagrant
 ansible/roles/kube-master/files/*
 ansible/roles/kube-node/files/*
+ansible/certs/vagrant/k8s-certs/*

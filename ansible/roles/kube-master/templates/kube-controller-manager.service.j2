@@ -5,7 +5,7 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 [Service]
 ExecStart=/bin/kube-controller-manager \
   --allocate-node-cidrs=false \
-  --bind-address=0.0.0.0 \
+  --bind-address={{ ip }} \
   --cluster-cidr={{ pod_cidr }} \
   --cluster-name=Kubernetes \
   --cluster-signing-cert-file={{ k8s_certs }}/ca.pem \
